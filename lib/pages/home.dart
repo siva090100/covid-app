@@ -1,10 +1,11 @@
 
-
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:covid_search/services/search.dart';
 import 'package:covid_search/services/hyperlink.dart';
+import 'package:covid_search/services/faq.dart';
+
 
 
 //import 'package:http/http.dart';
@@ -22,21 +23,27 @@ class _HomeState extends State<Home> {
   String key='loading';
   List news;
   List myth;
+  List questions;
   String title1='';
   String title2='';
+  String title3='';
    void result() async {
      setState(() {
        s = search.text;
      });
     Search instance = Search(search: '$s');
-  
+    Faq faq = Faq();
     await instance.getResult();
+    await faq.getResult();
     setState(() {
       key = '';
       news = instance.news;
       myth = instance.myth;
+      questions = faq.questions;
       title1 = 'News';
       title2 = 'Common Myths';
+      title3 = 'FAQ';
+      
     });
     
    }
@@ -52,14 +59,18 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return  DefaultTabController(
+      length: 2,
+      child: Scaffold(
       appBar: AppBar(
-        title: Text("Covid Search"),
+        title: Text("COVID-19 Search"),
         backgroundColor: Colors.black87,
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(48.0),
-          child: Row(
-            children: <Widget>[
+          preferredSize: Size.fromHeight(100.0),
+          child: Column( 
+            
+            children: <Widget> [
+              Row( children: <Widget>[
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.only(left: 12.0, bottom: 8.0),
@@ -86,6 +97,7 @@ class _HomeState extends State<Home> {
                   
                 ),
               ),
+              
               IconButton(
                 icon: Icon(
                   Icons.search,
@@ -96,12 +108,33 @@ class _HomeState extends State<Home> {
                   result();
 
                 },
-              )
+              ),
+              
+             
+            
             ],
           ),
+           
+                
+          TabBar(
+                    tabs: [ 
+                    Tab(icon: Icon(Icons.search)),
+                    Tab(icon: Icon(Icons.question_answer)),
+                    ],
+                  
+                
+                ),
+            ],
+          ),
+         
+         
         ),
+         
       ),
-      body: ListView( 
+      
+      body: TabBarView(
+      children:[
+      ListView( 
         children: <Widget>[
          Center(
           child: Text('$title1',
@@ -111,14 +144,14 @@ class _HomeState extends State<Home> {
           ),
           ),),
         ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: 400, minHeight: 56.0),
+        constraints: BoxConstraints(maxHeight: 300, minHeight: 56.0),
         child :ListView.builder(
         
         scrollDirection: Axis.horizontal,
         itemCount: news == null ? 0:news.length,
         itemBuilder: (BuildContext context, int index){
           return Container(
-            height: 400.0,
+            height: 300.0,
             width: 400.0,
             child: Card(
             
@@ -157,13 +190,13 @@ class _HomeState extends State<Home> {
           ),
           ),),
         ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: 400, minHeight: 56.0),
+        constraints: BoxConstraints(maxHeight: 300, minHeight: 56.0),
         child :ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: myth == null ? 0:myth.length,
         itemBuilder: (BuildContext context, int index){
           return Container(
-            
+            height: 300.0,
             width: 400.0,
             child: Card(
             
@@ -210,7 +243,56 @@ class _HomeState extends State<Home> {
         ),
         ],
     ),
-      
+
+      SingleChildScrollView(
+              child: Column(
+        children: <Widget>[
+        Center(
+            child: Text('$title3',
+            style: TextStyle(
+              fontSize: 30.0,
+              
+              color: Colors.indigoAccent,
+              fontStyle: FontStyle.italic,
+            ),
+            ),),  
+        Divider(),  
+         ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: 500, minHeight: 56.0),
+          child : ListView.builder(
+          
+          itemCount: myth == null ? 0:questions.length,
+          itemBuilder: (BuildContext context, int index){
+            return Container(
+              height: 100.0,
+              width: 400.0,
+              child: Card(
+              
+              child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text("${questions[index].toString().replaceAll("[", "").replaceAll("]", "")}",
+                     style: TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    
+              ),
+              color: Colors.blue[50],
+              ),
+            );
+          },
+         ),
+         ),
+        ],
+        ),
+      ),
+
+
+      ],
+      ),
+      ),
     );
   }
 
