@@ -16,6 +16,6 @@ class Faq {
     Response response = await get('https://covidsearchtest.herokuapp.com/query/faq');
     Map data =jsonDecode(response.body);
     questions = data['faqs'];
-    print(questions);
+  
   }
 }

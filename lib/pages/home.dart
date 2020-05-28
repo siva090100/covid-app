@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
@@ -16,17 +15,20 @@ class Home extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with TickerProviderStateMixin{
   Timer _debounce;
   TextEditingController search = TextEditingController();
+  TabController _tabController;
   String s;
   String key='loading';
   List news;
   List myth;
   List questions;
+  List similar;
   String title1='';
   String title2='';
   String title3='';
+  String title4='';
    void result() async {
      setState(() {
        s = search.text;
@@ -39,14 +41,38 @@ class _HomeState extends State<Home> {
       key = '';
       news = instance.news;
       myth = instance.myth;
+      similar = instance.similar;
       questions = faq.questions;
       title1 = 'News';
       title2 = 'Common Myths';
       title3 = 'FAQ';
+      title4 = 'Similar Questions';
       
     });
     
    }
+    void result1(String s) async {
+     
+    Search instance = Search(search: '$s');
+    Faq faq = Faq();
+    await instance.getResult();
+    await faq.getResult();
+    setState(() {
+      key = '';
+      news = instance.news;
+      myth = instance.myth;
+      similar = instance.similar;
+      questions = faq.questions;
+      title1 = 'News';
+      title2 = 'Common Myths';
+      title3 = 'FAQ';
+      title4 = 'Similar Questions';
+      
+    });
+    
+   }
+
+
    launchURL(String url) {
      launch('$url');
    }
@@ -55,13 +81,12 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(vsync: this, length: 2);
   }
 
   @override
   Widget build(BuildContext context) {
-    return  DefaultTabController(
-      length: 2,
-      child: Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: Text("COVID-19 Search"),
         backgroundColor: Colors.black87,
@@ -106,6 +131,7 @@ class _HomeState extends State<Home> {
                 onPressed: () {
                   
                   result();
+                  search.clear();
 
                 },
               ),
@@ -117,6 +143,7 @@ class _HomeState extends State<Home> {
            
                 
           TabBar(
+                    controller: _tabController,
                     tabs: [ 
                     Tab(icon: Icon(Icons.search)),
                     Tab(icon: Icon(Icons.question_answer)),
@@ -133,6 +160,7 @@ class _HomeState extends State<Home> {
       ),
       
       body: TabBarView(
+      controller: _tabController,
       children:[
       ListView( 
         children: <Widget>[
@@ -181,7 +209,11 @@ class _HomeState extends State<Home> {
         },
         ),
         ),
+
+
         Divider(),
+
+
         Center(
           child: Text('$title2',
           style: TextStyle(
@@ -241,8 +273,59 @@ class _HomeState extends State<Home> {
         },
         ),
         ),
+       
+        Divider(),
+        Center(
+          child: Text('$title4',
+          style: TextStyle(
+            fontSize: 30.0,
+            fontWeight:FontWeight.bold,
+          ),
+          ),),
+        ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: 150, minHeight: 56.0),
+        child :ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: myth == null ? 0:similar.length,
+        itemBuilder: (BuildContext context, int index){
+          return Container(
+            height: 300.0,
+            width: 400.0,
+            child: Card(
+            
+            child: InkWell(
+                  onTap: () {
+                        _tabController.animateTo(0);
+                        result1(similar[index].toString().replaceAll("[", "").replaceAll("]", ""));
+                        search.text = similar[index].toString().replaceAll("[", "").replaceAll("]", "");
+                    },
+                  child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: ListView(
+                    children: <Widget>[
+                      
+                     Text("${similar[index].toString().replaceAll("[", "").replaceAll("]", "")}",
+                     style: TextStyle(
+                       fontSize: 20.0,
+                       
+                     ),
+                     
+                     ),
+                     
+                      
+                    ],
+                  ),
+              ),
+            ),
+            color: Colors.blue[100],
+          ),
+        );
+        },
+        ),
+        ),
         ],
     ),
+
 
       SingleChildScrollView(
               child: Column(
@@ -268,17 +351,25 @@ class _HomeState extends State<Home> {
               width: 400.0,
               child: Card(
               
-              child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text("${questions[index].toString().replaceAll("[", "").replaceAll("]", "")}",
-                     style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
-                      fontStyle: FontStyle.italic,
+              child: InkWell(
+                      onTap: () {
+                        _tabController.animateTo(0);
+                        result1(questions[index].toString().replaceAll("[", "").replaceAll("]", ""));
+                        search.text = questions[index].toString().replaceAll("[", "").replaceAll("]", "");
+                    },
+                     child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Text("${questions[index].toString().replaceAll("[", "").replaceAll("]", "")}",
+                       style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                        fontStyle: FontStyle.italic,
+                        ),
                       ),
+                      
                     ),
-                    
               ),
+               
               color: Colors.blue[50],
               ),
             );
@@ -292,7 +383,7 @@ class _HomeState extends State<Home> {
 
       ],
       ),
-      ),
+      
     );
   }
 

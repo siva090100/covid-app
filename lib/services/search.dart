@@ -8,8 +8,7 @@ class Search {
   String search; // location name for UI
   List myth;
   List news;
-  
-
+  List similar;
   Search({this.search});
 
   Future<void> getResult() async {
@@ -18,7 +17,8 @@ class Search {
     Map data =jsonDecode(response.body);
      myth = data['Common Myths'];
      news = data['News'];
-     
+     similar = data['similar_questions'];
+       
     
 
     
