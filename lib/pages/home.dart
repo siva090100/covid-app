@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:covid_search/services/search.dart';
 import 'package:covid_search/services/hyperlink.dart';
 import 'package:covid_search/services/faq.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 
 
@@ -29,11 +30,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
   String title2='';
   String title3='';
   String title4='';
+  String update = 'True';
+  bool isloading = false;
+  String hit;
+  String summary='';
    void result() async {
      setState(() {
        s = search.text;
      });
-    Search instance = Search(search: '$s');
+    Search instance = Search(search: '$s',upd:'$update');
     Faq faq = Faq();
     await instance.getResult();
     await faq.getResult();
@@ -43,17 +48,24 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
       myth = instance.myth;
       similar = instance.similar;
       questions = faq.questions;
+      summary = instance.summary;
       title1 = 'News';
       title2 = 'Common Myths';
       title3 = 'FAQ';
       title4 = 'Similar Questions';
+      isloading = false;
+      hit = instance.hit;
       
     });
+    if(hit=='True')
+    setTimer();
+     
+   
     
    }
     void result1(String s) async {
      
-    Search instance = Search(search: '$s');
+    Search instance = Search(search: '$s',upd:'$update');
     Faq faq = Faq();
     await instance.getResult();
     await faq.getResult();
@@ -67,9 +79,49 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
       title2 = 'Common Myths';
       title3 = 'FAQ';
       title4 = 'Similar Questions';
+      isloading = false;
+      hit = instance.hit;
+      
       
     });
+    if(hit=='True')
+    setTimer();
     
+   }
+
+   void setTimer()
+   {
+      Timer(Duration(seconds: 30), () {
+        return showDialog<void>(
+           barrierDismissible: true, 
+           context: context,
+            builder: (BuildContext context) {
+             return AlertDialog(
+                title: Text('The Search has been updated. Do you want to view it?'),
+                actions: <Widget>[
+                FlatButton(
+                 child: Text('Yes'),
+                  onPressed: () {
+                     setState(() {
+                        update = 'False';
+                        isloading = true;
+                      });
+        
+                      result1(s);
+                      Navigator.pop(context);
+                     },
+                  ),
+                FlatButton(
+                 child: Text('No'),
+                  onPressed: () {
+                     Navigator.pop(context);
+                     },
+                  ),
+             ],
+             );
+            },
+      );
+      });
    }
 
 
@@ -129,9 +181,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  
+                  isloading = true;
                   result();
                   search.clear();
+                  
+                  
 
                 },
               ),
@@ -164,6 +218,25 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
       children:[
       ListView( 
         children: <Widget>[
+          isloading?Center(
+            child:SpinKitHourGlass(
+             size: 50.0,
+             color: Colors.black,
+             //controller: AnimationController(vsync: this, duration: const Duration(milliseconds: 1200)),
+          )):
+         Center(
+                    child: Card(
+              child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text('$summary',
+                          style: TextStyle(
+                          fontSize: 20.0,
+                          
+                    ),
+                   ),
+              ),
+           ),
+         ),
          Center(
           child: Text('$title1',
           style: TextStyle(
@@ -295,6 +368,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
             
             child: InkWell(
                   onTap: () {
+                         setState(() {
+                        isloading = true; 
+                        
+                        });
+
                         _tabController.animateTo(0);
                         result1(similar[index].toString().replaceAll("[", "").replaceAll("]", ""));
                         search.text = similar[index].toString().replaceAll("[", "").replaceAll("]", "");
@@ -328,8 +406,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
 
 
       SingleChildScrollView(
+        
               child: Column(
         children: <Widget>[
+          isloading?Center(
+            child:SpinKitHourGlass(
+             size: 50.0,
+             color: Colors.black,
+             //controller: AnimationController(vsync: this, duration: const Duration(milliseconds: 1200)),
+          )):
         Center(
             child: Text('$title3',
             style: TextStyle(
@@ -353,6 +438,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
               
               child: InkWell(
                       onTap: () {
+                        setState(() {
+                        isloading = true;  
+                        
+                        });
+                        
                         _tabController.animateTo(0);
                         result1(questions[index].toString().replaceAll("[", "").replaceAll("]", ""));
                         search.text = questions[index].toString().replaceAll("[", "").replaceAll("]", "");
